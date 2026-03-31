@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7-Day Challenge Tracker</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: rgba(24, 24, 27, 0.9);
+      --panel-2: rgba(39, 39, 42, 0.9);
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --line: rgba(255, 255, 255, 0.08);
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.16);
+      --red: #ef4444;
+      --red-soft: rgba(239, 68, 68, 0.16);
+      --gray: #52525b;
+      --gray-soft: rgba(82, 82, 91, 0.2);
+      --accent: #f4f4f5;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
+      --radius: 24px;
+      --radius-sm: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.06), transparent 30%),
+        linear-gradient(180deg, #111114 0%, #09090b 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .app {
+      width: min(100%, 1120px);
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 64px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .subtext {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 62ch;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pill.active {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .panel-inner {
+      padding: 18px;
+    }
+
+    .checkin-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .checkin-card::before {
+      content: "";
+      position: absolute;
+      inset: -40% auto auto 70%;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 65%);
+      pointer-events: none;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .section-kicker {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .identity-grid,
+    .action-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .identity-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .name-btn,
+    .action-btn,
+    .ghost-btn {
+      border: 0;
+      outline: none;
+      cursor: pointer;
+      color: var(--text);
+      border-radius: 20px;
+      transition: transform 180ms ease, opacity 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      font-weight: 800;
+    }
+
+    .name-btn {
+      padding: 18px 14px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      min-height: 76px;
+      font-size: 16px;
+    }
+
+    .name-btn:hover,
+    .action-btn:hover,
+    .ghost-btn:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .name-btn.active {
+      background: rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    }
+
+    .checkin-question {
+      margin: 18px 0 14px;
+      font-size: clamp(24px, 5vw, 34px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      max-width: 12ch;
+    }
+
+    .action-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .action-btn {
+      min-height: 110px;
+      padding: 18px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 18px;
+      border: 1px solid transparent;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .action-btn .emoji {
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .action-btn .meta {
+      font-size: 13px;
+      color: rgba(255,255,255,0.74);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .action-btn.yes {
+      background: linear-gradient(180deg, rgba(34,197,94,0.22), rgba(34,197,94,0.12));
+      border-color: rgba(34,197,94,0.34);
+    }
+
+    .action-btn.no {
+      background: linear-gradient(180deg, rgba(239,68,68,0.22), rgba(239,68,68,0.12));
+      border-color: rgba(239,68,68,0.34);
+    }
+
+    .ghost-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .status-box {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .status-box strong {
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .status-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .board-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .board-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .player-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      transition: opacity 180ms ease, filter 180ms ease, transform 180ms ease;
+    }
+
+    .player-card.out {
+      opacity: 0.66;
+      filter: grayscale(0.45);
+    }
+
+    .player-card.out::after {
+      content: "OUT";
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: rgba(255,255,255,0.76);
+      background: rgba(255,255,255,0.08);
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .player-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .player-name {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .meta-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+
+    .badge.good {
+      background: var(--green-soft);
+      border-color: rgba(34,197,94,0.22);
+      color: #dcfce7;
+    }
+
+    .badge.alert {
+      background: var(--red-soft);
+      border-color: rgba(239,68,68,0.22);
+      color: #fee2e2;
+    }
+
+    .day-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .day-cell {
+      border-radius: 18px;
+      min-height: 78px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      border: 1px solid var(--line);
+      background: var(--gray-soft);
+      transition: transform 160ms ease;
+    }
+
+    .day-cell.logged-yes {
+      background: var(--green-soft);
+      border-color: rgba(34,197,94,0.26);
+    }
+
+    .day-cell.logged-no {
+      background: var(--red-soft);
+      border-color: rgba(239,68,68,0.26);
+    }
+
+    .day-cell.today {
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .day-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.64);
+      font-weight: 800;
+    }
+
+    .day-mark {
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .day-mark.empty { color: rgba(255,255,255,0.35); }
+    .day-mark.yes { color: #86efac; }
+    .day-mark.no { color: #fca5a5; }
+
+    .subline {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .full-screen-message {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(9, 9, 11, 0.76);
+      backdrop-filter: blur(12px);
+    }
+
+    .full-screen-message.show {
+      display: grid;
+      animation: fadeIn 260ms ease;
+    }
+
+    .modal-card {
+      width: min(100%, 560px);
+      background: linear-gradient(180deg, rgba(24,24,27,0.98), rgba(17,17,20,0.98));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .modal-icon {
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 44px);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+
+    .modal-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .hidden { display: none !important; }
+
+    .loader {
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(255,255,255,0.14);
+      border-top-color: rgba(255,255,255,0.86);
+      border-radius: 999px;
+      animation: spin 1s linear infinite;
+      margin: 8px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (min-width: 860px) {
+      .layout {
+        grid-template-columns: 380px 1fr;
+        align-items: start;
+      }
+
+      .board-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .day-row {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .identity-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .player-top {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .meta-stack {
+        justify-content: flex-start;
+      }
+
+      .day-cell {
+        min-height: 70px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Shared challenge</div>
+          <h1>Stay strong. Together.</h1>
+        </div>
+        <div class="pill-row" id="headerPills"></div>
+      </div>
+      <p class="subtext">
+        A shared 7-day tracker for Ronak, Chirag, and Navneeth. Check in once each night. Everyone sees the live scoreboard.
+      </p>
+    </section>
+
+    <section class="layout">
+      <aside class="panel checkin-card">
+        <div class="panel-inner" id="leftPanelContent">
+          <div class="loader"></div>
+          <p class="section-kicker" style="text-align:center; margin-top: 10px;">Loading challenge…</p>
+        </div>
+      </aside>
+
+      <main class="panel">
+        <div class="panel-inner">
+          <div class="board-header">
+            <div>
+              <h2 class="section-title">Live dashboard</h2>
+              <p class="section-kicker">Green means success. Red means fail. Grey means not logged yet.</p>
+            </div>
+            <button class="ghost-btn" id="resetIdentityBtn" type="button">Switch player</button>
+          </div>
+          <div class="board-grid" id="dashboard"></div>
+          <div class="footer-note">Realtime sync powered by Firebase Realtime Database.</div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <div class="full-screen-message" id="overlay">
+    <div class="modal-card">
+      <div class="modal-icon" id="overlayIcon">🎉</div>
+      <h3 class="modal-title" id="overlayTitle">You did it.</h3>
+      <p class="modal-text" id="overlayText">Strong day. Keep stacking them.</p>
+      <button class="ghost-btn" id="overlayCloseBtn" type="button">Continue</button>
+    </div>
+  </div>
+
+  <script type="module">
+    /* =========================================================
+       FIREBASE CONFIG — SWAP IN YOUR REAL CREDENTIALS HERE
+       ========================================================= */
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    /* =========================================================
+       CHALLENGE SETTINGS
+       ========================================================= */
+    const PARTICIPANTS = ["Ronak", "Chirag", "Navneeth"];
+    const TOTAL_DAYS = 7;
+
+    // Set this to the local calendar date for Day 1.
+    // Example: "2026-04-03"
+    const CHALLENGE_START_DATE = "2026-04-03";
+
+    const STORAGE_KEY = "challengeSelectedPlayer";
+    const APP_VERSION = 1;
+
+    /* =========================================================
+       IMPORTS
+       ========================================================= */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      get,
+      update,
+      onValue,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import confetti from "https://cdn.skypack.dev/canvas-confetti";
+
+    /* =========================================================
+       APP SETUP
+       ========================================================= */
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const appRef = ref(db, "sharedChallenge7Day");
+
+    const leftPanelContent = document.getElementById("leftPanelContent");
+    const dashboardEl = document.getElementById("dashboard");
+    const headerPills = document.getElementById("headerPills");
+    const resetIdentityBtn = document.getElementById("resetIdentityBtn");
+
+    const overlay = document.getElementById("overlay");
+    const overlayIcon = document.getElementById("overlayIcon");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayText = document.getElementById("overlayText");
+    const overlayCloseBtn = document.getElementById("overlayCloseBtn");
+
+    let selectedPlayer = localStorage.getItem(STORAGE_KEY) || "";
+    let liveState = null;
+
+    function parseLocalDate(dateStr) {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      return new Date(y, m - 1, d, 0, 0, 0, 0);
+    }
+
+    function startOfToday() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    }
+
+    function addDays(date, amount) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + amount);
+      return d;
+    }
+
+    function diffInDays(a, b) {
+      const ms = 24 * 60 * 60 * 1000;
+      return Math.floor((a - b) / ms);
+    }
+
+    function formatDateLong(date) {
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function formatCountdown(targetDate) {
+      const now = new Date();
+      const diff = targetDate - now;
+      if (diff <= 0) return "Starting now";
+      const totalMinutes = Math.floor(diff / 60000);
+      const days = Math.floor(totalMinutes / 1440);
+      const hours = Math.floor((totalMinutes % 1440) / 60);
+      const minutes = totalMinutes % 60;
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    }
+
+    function getChallengeContext(startDateStr) {
+      const startDate = parseLocalDate(startDateStr);
+      const today = startOfToday();
+      const currentDayIndex = diffInDays(today, startDate) + 1;
+      const endDate = addDays(startDate, TOTAL_DAYS - 1);
+
+      return {
+        startDate,
+        endDate,
+        today,
+        currentDayIndex,
+        hasNotStarted: today < startDate,
+        isActive: today >= startDate && today <= endDate,
+        isFinished: today > endDate,
+      };
+    }
+
+    function getPlayerDays(state, name) {
+      return state?.participants?.[name]?.days || {};
+    }
+
+    function getEntryForDay(state, name, dayNumber) {
+      return getPlayerDays(state, name)[`day${dayNumber}`] || null;
+    }
+
+    function computeStats(state, name, context) {
+      const days = getPlayerDays(state, name);
+      let streak = 0;
+      let perfectSoFar = true;
+      let failed = false;
+      let completedCount = 0;
+      let successCount = 0;
+
+      for (let i = 1; i <= TOTAL_DAYS; i++) {
+        const entry = days[`day${i}`];
+        if (entry) completedCount += 1;
+        if (entry?.result === "yes") successCount += 1;
+      }
+
+      for (let i = 1; i <= Math.min(context.currentDayIndex, TOTAL_DAYS); i++) {
+        const entry = days[`day${i}`];
+        if (!entry) break;
+        if (entry.result === "yes") {
+          streak += 1;
+        } else {
+          perfectSoFar = false;
+          failed = true;
+          break;
+        }
+      }
+
+      for (let i = 1; i <= Math.min(context.currentDayIndex, TOTAL_DAYS); i++) {
+        const entry = days[`day${i}`];
+        if (entry?.result === "no") {
+          perfectSoFar = false;
+          failed = true;
+          break;
+        }
+      }
+
+      if (context.currentDayIndex <= 0) {
+        perfectSoFar = true;
+        failed = false;
+      }
+
+      return { streak, perfectSoFar, failed, completedCount, successCount };
+    }
+
+    function allSevenPassed(state) {
+      return PARTICIPANTS.every((name) => {
+        for (let i = 1; i <= TOTAL_DAYS; i++) {
+          const entry = getEntryForDay(state, name, i);
+          if (!entry || entry.result !== "yes") return false;
+        }
+        return true;
+      });
+    }
+
+    function everyoneFinished(state) {
+      return PARTICIPANTS.every((name) => {
+        for (let i = 1; i <= TOTAL_DAYS; i++) {
+          const entry = getEntryForDay(state, name, i);
+          if (!entry) return false;
+        }
+        return true;
+      });
+    }
+
+    function getWinners(state) {
+      const results = PARTICIPANTS.map((name) => {
+        let successCount = 0;
+        for (let i = 1; i <= TOTAL_DAYS; i++) {
+          const entry = getEntryForDay(state, name, i);
+          if (entry?.result === "yes") successCount += 1;
+        }
+        return { name, successCount };
+      }).sort((a, b) => b.successCount - a.successCount);
+
+      const topScore = results[0]?.successCount ?? 0;
+      const winners = results.filter((item) => item.successCount === topScore);
+      return { results, winners, topScore };
+    }
+
+    async function initializeChallenge() {
+      const snap = await get(appRef);
+      if (snap.exists()) return;
+
+      const participantsSeed = {};
+      PARTICIPANTS.forEach((name) => {
+        participantsSeed[name] = {
+          name,
+          days: {}
+        };
+      });
+
+      await set(appRef, {
+        meta: {
+          startDate: CHALLENGE_START_DATE,
+          createdAt: Date.now(),
+          version: APP_VERSION
+        },
+        participants: participantsSeed
+      });
+    }
+
+    async function ensureParticipantsExist(state) {
+      const updates = {};
+      let hasUpdates = false;
+      PARTICIPANTS.forEach((name) => {
+        if (!state?.participants?.[name]) {
+          updates[`participants/${name}`] = { name, days: {} };
+          hasUpdates = true;
+        }
+      });
+      if (hasUpdates) {
+        await update(appRef, updates);
+      }
+    }
+
+    function showOverlay({ icon, title, text }) {
+      overlayIcon.textContent = icon;
+      overlayTitle.textContent = title;
+      overlayText.textContent = text;
+      overlay.classList.add("show");
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("show");
+    }
+
+    function burstConfetti() {
+      const duration = 2200;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 70,
+          origin: { x: 0 }
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 70,
+          origin: { x: 1 }
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+
+    function renderHeader(state, context) {
+      const selectedMarkup = selectedPlayer
+        ? `<span class="pill active">You: ${selectedPlayer}</span>`
+        : `<span class="pill">Pick your name to check in</span>`;
+
+      const phaseText = context.hasNotStarted
+        ? `Starts ${formatDateLong(context.startDate)}`
+        : context.isActive
+          ? `Today is Day ${context.currentDayIndex} of ${TOTAL_DAYS}`
+          : `Challenge complete`;
+
+      headerPills.innerHTML = `
+        ${selectedMarkup}
+        <span class="pill">${phaseText}</span>
+      `;
+    }
+
+    function renderIdentitySelector() {
+      return `
+        <div>
+          <div class="eyebrow">Step 1</div>
+          <h2 class="section-title">Who’s checking in?</h2>
+          <p class="section-kicker">No login. Just tap your name and log today’s result.</p>
+          <div class="identity-grid">
+            ${PARTICIPANTS.map((name) => `
+              <button class="name-btn ${selectedPlayer === name ? "active" : ""}" data-name="${name}" type="button">
+                ${name}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCheckinPanel(state, context) {
+      const dayNumber = context.currentDayIndex;
+
+      if (!selectedPlayer) {
+        return renderIdentitySelector();
+      }
+
+      if (context.hasNotStarted) {
+        return `
+          ${renderIdentitySelector()}
+          <div class="status-box" style="margin-top: 16px;">
+            <strong>Challenge starts soon</strong>
+            <p>Day 1 begins on <strong>${formatDateLong(context.startDate)}</strong>. Countdown: <strong>${formatCountdown(context.startDate)}</strong>.</p>
+          </div>
+        `;
+      }
+
+      if (context.isFinished) {
+        const { winners, topScore } = getWinners(state);
+        const perfect = allSevenPassed(state);
+        return `
+          ${renderIdentitySelector()}
+          <div class="status-box" style="margin-top: 16px;">
+            <strong>${perfect ? "All three finished perfect" : winners.length > 1 ? "Final results: tie at the top" : `${winners[0].name} takes it`}</strong>
+            <p>
+              ${perfect
+                ? "Every participant went 7-for-7. That deserves a full team celebration."
+                : `Best score: ${topScore}/${TOTAL_DAYS}. ${winners.map((w) => w.name).join(", ")} ${winners.length > 1 ? "share the top spot" : "finishes on top"}.`}
+            </p>
+          </div>
+        `;
+      }
+
+      const todayEntry = getEntryForDay(state, selectedPlayer, dayNumber);
+      if (todayEntry) {
+        return `
+          ${renderIdentitySelector()}
+          <div class="status-box" style="margin-top: 16px;">
+            <strong>You're done for today</strong>
+            <p>You already logged <strong>${todayEntry.result === "yes" ? "✅ Yes" : "❌ No"}</strong> for Day ${dayNumber}. Check back tomorrow.</p>
+          </div>
+        `;
+      }
+
+      const alreadyOut = computeStats(state, selectedPlayer, context).failed;
+      return `
+        ${renderIdentitySelector()}
+        <div style="margin-top: 18px;">
+          <div class="eyebrow">Day ${dayNumber}</div>
+          <div class="checkin-question">Did you stay strong today?</div>
+          <p class="section-kicker">Your entry locks as soon as you tap. ${alreadyOut ? "You’re already out, but you can still log today for a complete record." : "Keep the streak alive."}</p>
+          <div class="action-grid">
+            <button class="action-btn yes" data-action="yes" type="button">
+              <div class="emoji">✅</div>
+              <div>
+                <div>Yes</div>
+                <div class="meta">Log a successful day</div>
+              </div>
+            </button>
+            <button class="action-btn no" data-action="no" type="button">
+              <div class="emoji">❌</div>
+              <div>
+                <div>No</div>
+                <div class="meta">Log it honestly and reset tomorrow</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard(state, context) {
+      dashboardEl.innerHTML = PARTICIPANTS.map((name) => {
+        const stats = computeStats(state, name, context);
+        const days = Array.from({ length: TOTAL_DAYS }, (_, index) => {
+          const dayNumber = index + 1;
+          const entry = getEntryForDay(state, name, dayNumber);
+          const isToday = context.currentDayIndex === dayNumber && context.isActive;
+
+          let mark = "⬜";
+          let markClass = "empty";
+          let cellClass = "";
+          if (entry?.result === "yes") {
+            mark = "✅";
+            markClass = "yes";
+            cellClass = "logged-yes";
+          } else if (entry?.result === "no") {
+            mark = "❌";
+            markClass = "no";
+            cellClass = "logged-no";
+          }
+
+          return `
+            <div class="day-cell ${cellClass} ${isToday ? "today" : ""}">
+              <div class="day-label">Day ${dayNumber}</div>
+              <div class="day-mark ${markClass}">${mark}</div>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <article class="player-card ${stats.failed ? "out" : ""}">
+            <div class="player-top">
+              <div class="player-name">${name}</div>
+              <div class="meta-stack">
+                <span class="badge">Streak: ${stats.streak}</span>
+                ${stats.perfectSoFar && stats.completedCount > 0 ? `<span class="badge good">Still standing</span>` : ""}
+                ${stats.failed ? `<span class="badge alert">Failed</span>` : ""}
+              </div>
+            </div>
+            <div class="day-row">${days}</div>
+            <div class="subline">
+              ${stats.successCount}/${TOTAL_DAYS} successes logged.
+              ${stats.failed ? "This player is out of the perfect run." : stats.completedCount === 0 ? "No entries yet." : "Still alive in the run."}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderLeftPanel(state, context) {
+      leftPanelContent.innerHTML = renderCheckinPanel(state, context);
+
+      document.querySelectorAll(".name-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedPlayer = btn.dataset.name;
+          localStorage.setItem(STORAGE_KEY, selectedPlayer);
+          renderApp();
+        });
+      });
+
+      document.querySelectorAll(".action-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const action = btn.dataset.action;
+          await logToday(action);
+        });
+      });
+    }
+
+    async function logToday(result) {
+      if (!liveState || !selectedPlayer) return;
+
+      const context = getChallengeContext(liveState.meta.startDate);
+      if (!context.isActive) return;
+
+      const dayNumber = context.currentDayIndex;
+      const existing = getEntryForDay(liveState, selectedPlayer, dayNumber);
+      if (existing) return;
+
+      const path = `participants/${selectedPlayer}/days/day${dayNumber}`;
+      await update(appRef, {
+        [path]: {
+          result,
+          locked: true,
+          loggedAt: Date.now(),
+          loggedDay: dayNumber,
+          updatedAt: serverTimestamp()
+        }
+      });
+
+      if (result === "yes") {
+        burstConfetti();
+        showOverlay({
+          icon: "🎉",
+          title: "Strong day.",
+          text: "That one counts. Keep going tomorrow."
+        });
+      } else {
+        showOverlay({
+          icon: "🤝",
+          title: "That’s okay.",
+          text: "One tough day does not define you. The log is saved, and tomorrow is a fresh start."
+        });
+      }
+    }
+
+    function maybeShowGlobalEndState(state, context) {
+      if (!context.isFinished) return;
+
+      if (allSevenPassed(state)) {
+        showOverlay({
+          icon: "🏆",
+          title: "Perfect team finish.",
+          text: "All three participants went 7 for 7. That is elite consistency."
+        });
+        burstConfetti();
+        return;
+      }
+
+      const { winners, topScore } = getWinners(state);
+      const names = winners.map((w) => w.name).join(", ");
+      showOverlay({
+        icon: winners.length > 1 ? "🥇" : "🏁",
+        title: winners.length > 1 ? "Final result: tie" : `${names} wins`,
+        text: `${names} finished with the top score: ${topScore}/${TOTAL_DAYS}.`
+      });
+    }
+
+    function maybeShowGroupPerfectScreen(state, context) {
+      if (!context.isActive) return;
+      if (!everyoneFinished(state)) return;
+      if (!allSevenPassed(state)) return;
+
+      showOverlay({
+        icon: "🎊",
+        title: "Everyone stayed strong.",
+        text: "All 3 participants completed the full 7-day challenge perfectly."
+      });
+      burstConfetti();
+    }
+
+    function renderApp() {
+      if (!liveState?.meta?.startDate) return;
+      const context = getChallengeContext(liveState.meta.startDate);
+      renderHeader(liveState, context);
+      renderLeftPanel(liveState, context);
+      renderDashboard(liveState, context);
+    }
+
+    resetIdentityBtn.addEventListener("click", () => {
+      selectedPlayer = "";
+      localStorage.removeItem(STORAGE_KEY);
+      hideOverlay();
+      renderApp();
+    });
+
+    overlayCloseBtn.addEventListener("click", hideOverlay);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) hideOverlay();
+    });
+
+    await initializeChallenge();
+
+    onValue(appRef, async (snapshot) => {
+      liveState = snapshot.val();
+      await ensureParticipantsExist(liveState);
+      renderApp();
+
+      const context = getChallengeContext(liveState.meta.startDate);
+      if (context.isFinished) {
+        maybeShowGlobalEndState(liveState, context);
+      } else if (everyoneFinished(liveState) && allSevenPassed(liveState)) {
+        maybeShowGroupPerfectScreen(liveState, context);
+      }
+    });
+  </script>
+</body>
+</html>
